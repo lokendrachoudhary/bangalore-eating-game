@@ -288,6 +288,8 @@ export class Game {
         obj.consumeProgress = 0;
         obj.originalY = obj.mesh.position.y;
         obj.originalScale = 1;
+        obj.holeX = holeX;
+        obj.holeZ = holeZ;
 
         // Dust particle burst
         this.particles.burst(obj.x, 0.1, obj.z, 6 + obj.tier * 2, 0xbcaaa4);
@@ -297,6 +299,8 @@ export class Game {
           this.playerRadius = BASE_RADIUS * Math.pow(1 + this.totalVolume / VOLUME_SCALE, 1 / 3);
           this.playerHole.setRadius(this.playerRadius);
           this.score += obj.points;
+          // Floating score popup
+          this.showScorePopup(obj.x, obj.z, obj.points);
         }
         consumed++;
       }
@@ -319,12 +323,52 @@ export class Game {
         // Scale down
         const scale = 1 - t;
         obj.mesh.scale.set(scale, scale, scale);
+        // Pull toward hole center
+        obj.mesh.position.x = lerp(obj.x, obj.holeX, t * t);
+        obj.mesh.position.z = lerp(obj.z, obj.holeZ, t * t);
         // Move down into the hole
-        obj.mesh.position.y = obj.originalY - t * 3;
-        // Slight rotation for visual flair
-        obj.mesh.rotation.y += dt * 8;
+        obj.mesh.position.y = obj.originalY - t * t * 4;
+        // Spin as it falls in
+        obj.mesh.rotation.y += dt * (8 + t * 15);
       }
     }
+  }
+
+  private scorePopups: Array<{ el: HTMLDivElement; life: number }> = [];
+
+  private showScorePopup(x: number, z: number, points: number): void {
+    const div = document.createElement('div');
+    div.textContent = `+${points}`;
+    div.style.cssText = `
+      position: absolute; font-family: system-ui; font-size: 20px; font-weight: 900;
+      color: #ffeb3b; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      pointer-events: none; z-index: 20; transition: transform 0.8s, opacity 0.8s;
+      transform: translateY(0px); opacity: 1;
+    `;
+
+    // Project 3D to screen
+    const vec = new THREE.Vector3(x, 2, z);
+    vec.project(this.camera);
+    const sx = (vec.x * 0.5 + 0.5) * window.innerWidth;
+    const sy = (-vec.y * 0.5 + 0.5) * window.innerHeight;
+    div.style.left = `${sx}px`;
+    div.style.top = `${sy}px`;
+
+    document.getElementById('ui-overlay')!.appendChild(div);
+
+    // Animate up and fade
+    requestAnimationFrame(() => {
+      div.style.transform = 'translateY(-60px)';
+      div.style.opacity = '0';
+    });
+
+    this.scorePopups.push({ el: div, life: 0 });
+
+    // Clean up after animation
+    setTimeout(() => {
+      div.remove();
+      this.scorePopups = this.scorePopups.filter(p => p.el !== div);
+    }, 900);
   }
 
   private updateAI(dt: number): void {
@@ -388,6 +432,8 @@ export class Game {
           obj.consuming = true;
           obj.consumeProgress = 0;
           obj.originalY = obj.mesh.position.y;
+          obj.holeX = ai.x;
+          obj.holeZ = ai.z;
           this.particles.burst(obj.x, 0.1, obj.z, 4, 0xbcaaa4);
           ai.totalVolume += obj.volume;
           ai.radius = BASE_RADIUS * Math.pow(1 + ai.totalVolume / VOLUME_SCALE, 1 / 3);

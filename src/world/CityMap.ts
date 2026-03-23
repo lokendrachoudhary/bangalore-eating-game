@@ -24,6 +24,8 @@ export interface PlacedObject {
   consumeProgress: number;
   originalY: number;
   originalScale: number;
+  holeX: number;  // X position of the hole that consumed this
+  holeZ: number;  // Z position of the hole that consumed this
 }
 
 export const MAP_SIZE = 120; // 120x120 unit map
@@ -214,6 +216,8 @@ function placeObjects(
       consumeProgress: 0,
       originalY: 0,
       originalScale: 1,
+      holeX: 0,
+      holeZ: 0,
     });
     placed++;
   }
@@ -273,6 +277,8 @@ export function populateCity(scene: THREE.Scene): PlacedObject[] {
       consumeProgress: 0,
       originalY: 0,
       originalScale: 1,
+      holeX: 0,
+      holeZ: 0,
     });
   }
 
