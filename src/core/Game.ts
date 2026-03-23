@@ -163,7 +163,7 @@ export class Game {
         radius: BASE_RADIUS,
         totalVolume: 0,
         score: 0,
-        speed: 10 + Math.random() * 5,
+        speed: 7 + Math.random() * 4,
         targetX: 0,
         targetZ: 0,
         name: BOT_NAMES[i],
@@ -307,11 +307,11 @@ export class Game {
       if (obj.consumed || obj.consuming) continue;
       if (!canEat(holeRadius, obj.tier)) continue;
 
-      const dist = distance2D(holeX, holeZ, obj.x, obj.z);
+      let dist = distance2D(holeX, holeZ, obj.x, obj.z);
 
       // Pull nearby objects toward the hole (gravitational effect)
-      if (dist < holeRadius * 1.8 && dist > holeRadius * 0.3) {
-        const pullStrength = 0.02 * (1 - dist / (holeRadius * 1.8));
+      if (dist < holeRadius * 2.0 && dist > holeRadius * 0.2) {
+        const pullStrength = 0.06 * (1 - dist / (holeRadius * 2.0));
         const dx = holeX - obj.x;
         const dz = holeZ - obj.z;
         const mag = Math.sqrt(dx * dx + dz * dz) || 1;
@@ -319,9 +319,12 @@ export class Game {
         obj.z += (dz / mag) * pullStrength;
         obj.mesh.position.x = obj.x;
         obj.mesh.position.z = obj.z;
+        // Recalculate distance after pull
+        dist = distance2D(holeX, holeZ, obj.x, obj.z);
       }
 
-      if (dist < holeRadius * 0.9) {
+      // Consume if object center is inside the hole
+      if (dist < holeRadius * 1.0) {
         obj.consuming = true;
         obj.consumeProgress = 0;
         obj.originalY = obj.mesh.position.y;
@@ -524,7 +527,7 @@ export class Game {
         if (obj.consumed || obj.consuming) continue;
         if (!canEat(ai.radius, obj.tier)) continue;
         const d = distance2D(ai.x, ai.z, obj.x, obj.z);
-        if (d < ai.radius * 0.7) {
+        if (d < ai.radius * 0.85) {
           obj.consuming = true;
           obj.consumeProgress = 0;
           obj.originalY = obj.mesh.position.y;
