@@ -31,7 +31,7 @@ const BOT_NAMES = [
 const BOT_COLORS = ['#e91e63', '#ff9800', '#9c27b0', '#00bcd4', '#8bc34a'];
 
 const ROUND_DURATION = 120; // 2 minutes
-const BASE_RADIUS = 1.5;
+const BASE_RADIUS = 2.0;
 const VOLUME_SCALE = 50;
 const HALF_MAP = MAP_SIZE / 2;
 
@@ -308,7 +308,20 @@ export class Game {
       if (!canEat(holeRadius, obj.tier)) continue;
 
       const dist = distance2D(holeX, holeZ, obj.x, obj.z);
-      if (dist < holeRadius * 0.7) {
+
+      // Pull nearby objects toward the hole (gravitational effect)
+      if (dist < holeRadius * 1.8 && dist > holeRadius * 0.3) {
+        const pullStrength = 0.02 * (1 - dist / (holeRadius * 1.8));
+        const dx = holeX - obj.x;
+        const dz = holeZ - obj.z;
+        const mag = Math.sqrt(dx * dx + dz * dz) || 1;
+        obj.x += (dx / mag) * pullStrength;
+        obj.z += (dz / mag) * pullStrength;
+        obj.mesh.position.x = obj.x;
+        obj.mesh.position.z = obj.z;
+      }
+
+      if (dist < holeRadius * 0.9) {
         obj.consuming = true;
         obj.consumeProgress = 0;
         obj.originalY = obj.mesh.position.y;

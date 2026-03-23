@@ -98,7 +98,7 @@ export class HoleRenderer {
   static createGround(size: number): THREE.Mesh {
     const geom = new THREE.PlaneGeometry(size, size);
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x4a7c59, // Grass green
+      color: 0x5a7a52, // Bangalore greenery - slightly brownish green
       roughness: 0.9,
     });
     const ground = new THREE.Mesh(geom, mat);

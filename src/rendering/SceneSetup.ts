@@ -8,7 +8,7 @@ export function createRenderer(container: HTMLElement): THREE.WebGLRenderer {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = false;
-  renderer.setClearColor(0x87ceeb);
+  renderer.setClearColor(0x8ec8e8); // Warm Bangalore sky
   container.insertBefore(renderer.domElement, container.firstChild);
 
   window.addEventListener('resize', () => {
@@ -39,16 +39,20 @@ export function createCamera(): THREE.PerspectiveCamera {
 
 export function createScene(): THREE.Scene {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x87ceeb, 80, 200);
+  scene.fog = new THREE.Fog(0x8ec8e8, 100, 250);
 
-  // Ambient light
-  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  // Warm ambient light (Bangalore's golden sunlight)
+  const ambient = new THREE.AmbientLight(0xfff8e1, 0.6);
   scene.add(ambient);
 
-  // Directional sun light
-  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+  // Warm directional sun light
+  const sun = new THREE.DirectionalLight(0xfff3e0, 0.9);
   sun.position.set(50, 80, 30);
   scene.add(sun);
+
+  // Fill light from below for better visibility
+  const fill = new THREE.HemisphereLight(0x87ceeb, 0x4a7c59, 0.3);
+  scene.add(fill);
 
   return scene;
 }
