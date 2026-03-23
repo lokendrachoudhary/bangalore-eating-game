@@ -58,8 +58,27 @@ npm run preview      # Preview production build
 ```
 
 ## Current Status
-- Phase 1: MVP Core - IN PROGRESS
-- Phase 2: Bangalore City Map - Pending
-- Phase 3: AI Opponents - Pending
+- Phase 1: MVP Core - COMPLETE
+- Phase 2: Bangalore City Map - COMPLETE
+- Phase 3: AI Opponents - COMPLETE
 - Phase 4: Mobile (Capacitor) - Pending
-- Phase 5: Polish & Expansion - Pending
+- Phase 5: Polish & Expansion - IN PROGRESS
+
+## What's Working
+- Playable 3D game with hole mechanics (movement, growth, consumption)
+- Bangalore-themed procedural assets (auto-rickshaws, BMTC buses, Vidhana Soudha, Bangalore Palace, ISKCON Temple, Lalbagh Glasshouse, coffee shops, metro pillars, IT parks, banyan trees)
+- Cubbon Park and Lalbagh as distinct green zones
+- 4 AI bot opponents with steering behaviors
+- 2-minute timed rounds with leaderboard
+- Particle effects on consumption
+- Pull-toward-hole consumption animation with spin
+- Floating score popups (+10, +50, etc.)
+- Size-up notification banner on tier progression
+- Hole-vs-hole mechanic (player can eat smaller AI holes, gets eaten by bigger ones)
+- Minimap showing all holes and roads
+- Procedural Web Audio sound effects (eat, tier-up, death, game over)
+- Sound toggle button
+- Keyboard (WASD/arrows) and touch controls
+
+## GitHub
+https://github.com/lokendrachoudhary/bangalore-eating-game

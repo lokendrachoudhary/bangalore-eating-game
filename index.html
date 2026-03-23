@@ -48,6 +48,20 @@
       #loading-screen .loading-text { font-family: system-ui; font-size: 20px; color: #fff; margin-bottom: 20px; }
       .progress-bar { width: 240px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
       .progress-fill { height: 100%; background: #4fc3f7; width: 0%; transition: width 0.3s; }
+
+      /* Sound toggle */
+      #sound-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(0,0,0,0.4); color: white; font-size: 20px; cursor: pointer; z-index: 15; }
+
+      /* Size up notification */
+      #size-up { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-family: system-ui; font-size: 36px; font-weight: 900; color: #ffeb3b; text-shadow: 0 3px 8px rgba(0,0,0,0.6); pointer-events: none; z-index: 20; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; opacity: 0; white-space: nowrap; }
+      #size-up.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+      /* Controls hint */
+      .controls-hint { font-family: system-ui; font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 12px; }
+
+      /* Minimap */
+      #minimap { position: absolute; bottom: 12px; left: 12px; width: 100px; height: 100px; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); overflow: hidden; }
+      #minimap canvas { width: 100%; height: 100%; }
     </style>
   </head>
   <body>
@@ -68,6 +82,7 @@
           <h1>Bangalore<br/>Eating Game</h1>
           <div class="subtitle">Swallow the city!</div>
           <button id="play-btn">PLAY</button>
+          <div class="controls-hint">WASD or Arrow Keys to move | Touch to play on mobile</div>
           <div id="city-label">Bangalore, India</div>
         </div>
         <!-- Game Over -->
@@ -77,6 +92,12 @@
           <div class="final-rank" id="final-rank">Rank: #1</div>
           <button id="restart-btn">PLAY AGAIN</button>
         </div>
+        <!-- Size Up Notification -->
+        <div id="size-up"></div>
+        <!-- Sound Toggle -->
+        <button id="sound-btn">🔊</button>
+        <!-- Minimap -->
+        <div id="minimap" style="display:none;"><canvas id="minimap-canvas" width="100" height="100"></canvas></div>
         <!-- Loading -->
         <div id="loading-screen">
           <div class="loading-text">Loading Bangalore...</div>

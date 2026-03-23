@@ -69,6 +69,11 @@ export class Game {
   private gameOverEl!: HTMLElement;
   private finalScoreEl!: HTMLElement;
   private finalRankEl!: HTMLElement;
+  private sizeUpEl!: HTMLElement;
+  private minimapCanvas!: HTMLCanvasElement;
+  private minimapCtx!: CanvasRenderingContext2D;
+  private minimapEl!: HTMLElement;
+  private soundBtn!: HTMLElement;
 
   async init(): Promise<void> {
     const container = document.getElementById('game-container')!;
@@ -87,10 +92,19 @@ export class Game {
     this.gameOverEl = document.getElementById('game-over')!;
     this.finalScoreEl = document.getElementById('final-score')!;
     this.finalRankEl = document.getElementById('final-rank')!;
+    this.sizeUpEl = document.getElementById('size-up')!;
+    this.minimapCanvas = document.getElementById('minimap-canvas') as HTMLCanvasElement;
+    this.minimapCtx = this.minimapCanvas.getContext('2d')!;
+    this.minimapEl = document.getElementById('minimap')!;
+    this.soundBtn = document.getElementById('sound-btn')!;
 
     // Button handlers
     document.getElementById('play-btn')!.addEventListener('click', () => this.startGame());
     document.getElementById('restart-btn')!.addEventListener('click', () => this.startGame());
+    this.soundBtn.addEventListener('click', () => {
+      const enabled = this.audio.toggle();
+      this.soundBtn.textContent = enabled ? '🔊' : '🔇';
+    });
 
     // Game loop
     this.loop = new GameLoop(
@@ -166,6 +180,7 @@ export class Game {
     this.gameOverEl.style.display = 'none';
     this.hudEl.style.display = 'flex';
     this.leaderboardEl.style.display = 'block';
+    this.minimapEl.style.display = 'block';
   }
 
   private clearScene(): void {
@@ -248,6 +263,9 @@ export class Game {
 
     // Update HUD
     this.updateHUD();
+
+    // Update minimap
+    this.updateMinimap();
   }
 
   private checkHoleVsHole(): void {
@@ -312,6 +330,7 @@ export class Game {
           if (newTier > this.lastTier) {
             this.lastTier = newTier;
             this.audio.playTierUp();
+            this.showSizeUp(TIER_NAMES[newTier]);
           }
           // Floating score popup
           this.showScorePopup(obj.x, obj.z, obj.points);
@@ -383,6 +402,56 @@ export class Game {
       div.remove();
       this.scorePopups = this.scorePopups.filter(p => p.el !== div);
     }, 900);
+  }
+
+  private sizeUpTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  private showSizeUp(tierName: string): void {
+    this.sizeUpEl.textContent = `SIZE UP! ${tierName}`;
+    this.sizeUpEl.classList.add('show');
+    if (this.sizeUpTimeout) clearTimeout(this.sizeUpTimeout);
+    this.sizeUpTimeout = setTimeout(() => {
+      this.sizeUpEl.classList.remove('show');
+    }, 1500);
+  }
+
+  private updateMinimap(): void {
+    const ctx = this.minimapCtx;
+    const w = 100, h = 100;
+    const scale = w / MAP_SIZE;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#2d5a3e';
+    ctx.fillRect(0, 0, w, h);
+
+    // Roads (simplified)
+    ctx.fillStyle = '#37474f';
+    ctx.fillRect(0, h / 2 - 2, w, 4); // MG Road
+    ctx.fillRect(w / 2 - 2, 0, 4, h); // Namma Metro
+
+    // AI holes
+    for (const ai of this.aiHoles) {
+      if (!ai.renderer.group.visible) continue;
+      const mx = (ai.x + MAP_SIZE / 2) * scale;
+      const mz = (ai.z + MAP_SIZE / 2) * scale;
+      ctx.fillStyle = ai.color;
+      ctx.beginPath();
+      ctx.arc(mx, mz, Math.max(2, ai.radius * scale), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Player
+    const px = (this.playerX + MAP_SIZE / 2) * scale;
+    const pz = (this.playerZ + MAP_SIZE / 2) * scale;
+    ctx.fillStyle = '#4fc3f7';
+    ctx.beginPath();
+    ctx.arc(px, pz, Math.max(3, this.playerRadius * scale), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
 
   private updateAI(dt: number): void {
@@ -517,6 +586,7 @@ export class Game {
 
     this.hudEl.style.display = 'none';
     this.leaderboardEl.style.display = 'none';
+    this.minimapEl.style.display = 'none';
     this.gameOverEl.style.display = 'flex';
   }
 
