@@ -17,6 +17,7 @@ export interface PlacedObject {
   points: number;
   volume: number;
   name: string;
+  objectRadius: number; // Visual size - hole must be bigger to eat
   x: number;
   z: number;
   consumed: boolean;
@@ -61,35 +62,36 @@ interface Neighborhood {
   color: number;   // ground accent color
 }
 
+// Neighborhoods now tile the ENTIRE 160x160 map with no empty gaps.
+// Layout based on real Bangalore relative positions.
 const NEIGHBORHOODS: Neighborhood[] = [
-  // Central
-  { name: 'MG Road',        x: 0,   z: 0,    w: 20, h: 12, type: 'commercial', density: 0.9, color: 0x455a64 },
-  { name: 'Brigade Road',   x: -8,  z: -10,  w: 12, h: 10, type: 'market',     density: 0.9, color: 0x546e7a },
-  { name: 'Majestic',       x: -20, z: -15,  w: 18, h: 14, type: 'commercial', density: 0.8, color: 0x4e342e },
+  // === ROW 1: NORTH (z: -80 to -30) ===
+  { name: 'Yeshwanthpur',   x: -55, z: -55, w: 30, h: 30, type: 'commercial', density: 0.7, color: 0x4e342e },
+  { name: 'Malleshwaram',   x: -25, z: -55, w: 30, h: 30, type: 'old_city',   density: 0.8, color: 0x5d4037 },
+  { name: 'Sadashivanagar', x: 5,   z: -55, w: 30, h: 30, type: 'residential',density: 0.5, color: 0x3e5c2e },
+  { name: 'Cantonment',     x: 35,  z: -55, w: 30, h: 30, type: 'old_city',   density: 0.6, color: 0x4e342e },
+  { name: 'Hebbal',         x: 65,  z: -55, w: 30, h: 30, type: 'residential',density: 0.5, color: 0x3e5c2e },
 
-  // North
-  { name: 'Malleshwaram',   x: -35, z: -40,  w: 22, h: 18, type: 'old_city',   density: 0.7, color: 0x5d4037 },
-  { name: 'Sadashivanagar', x: -5,  z: -42,  w: 18, h: 14, type: 'residential',density: 0.5, color: 0x33691e },
-  { name: 'Cantonment',     x: 25,  z: -35,  w: 20, h: 16, type: 'old_city',   density: 0.6, color: 0x4e342e },
+  // === ROW 2: CENTRAL-NORTH (z: -30 to 0) ===
+  { name: 'Rajajinagar',    x: -55, z: -20, w: 30, h: 25, type: 'residential',density: 0.6, color: 0x3e5c2e },
+  { name: 'Majestic',       x: -25, z: -20, w: 30, h: 25, type: 'commercial', density: 0.9, color: 0x455a64 },
+  { name: 'Cubbon Park',    x: 5,   z: -20, w: 30, h: 25, type: 'park',       density: 0.3, color: 0x1b5e20 },
+  { name: 'MG Road',        x: 35,  z: -20, w: 30, h: 25, type: 'commercial', density: 0.9, color: 0x455a64 },
+  { name: 'Indiranagar',    x: 65,  z: -20, w: 30, h: 25, type: 'commercial', density: 0.8, color: 0x37474f },
 
-  // East
-  { name: 'Indiranagar',    x: 35,  z: 0,    w: 22, h: 16, type: 'commercial', density: 0.8, color: 0x37474f },
-  { name: 'Whitefield',     x: 60,  z: 5,    w: 20, h: 20, type: 'it_hub',     density: 0.7, color: 0x263238 },
+  // === ROW 3: CENTRAL-SOUTH (z: 0 to 25) ===
+  { name: 'Vijayanagar',    x: -55, z: 8,   w: 30, h: 25, type: 'residential',density: 0.5, color: 0x3e5c2e },
+  { name: 'Basavanagudi',   x: -25, z: 8,   w: 30, h: 25, type: 'old_city',   density: 0.7, color: 0x5d4037 },
+  { name: 'Lalbagh',        x: 5,   z: 8,   w: 30, h: 25, type: 'park',       density: 0.3, color: 0x1b5e20 },
+  { name: 'Koramangala',    x: 35,  z: 8,   w: 30, h: 25, type: 'commercial', density: 0.8, color: 0x37474f },
+  { name: 'HAL',            x: 65,  z: 8,   w: 30, h: 25, type: 'it_hub',     density: 0.6, color: 0x263238 },
 
-  // South
-  { name: 'Koramangala',    x: 15,  z: 20,   w: 22, h: 16, type: 'commercial', density: 0.8, color: 0x37474f },
-  { name: 'Jayanagar',      x: -15, z: 35,   w: 22, h: 18, type: 'residential',density: 0.6, color: 0x2e7d32 },
-  { name: 'BTM Layout',     x: 15,  z: 38,   w: 18, h: 14, type: 'residential',density: 0.7, color: 0x33691e },
-  { name: 'HSR Layout',     x: 40,  z: 40,   w: 18, h: 16, type: 'it_hub',     density: 0.6, color: 0x263238 },
-  { name: 'Basavanagudi',   x: -25, z: 18,   w: 18, h: 14, type: 'old_city',   density: 0.6, color: 0x5d4037 },
-
-  // West
-  { name: 'Rajajinagar',    x: -45, z: -10,  w: 18, h: 16, type: 'residential',density: 0.5, color: 0x33691e },
-  { name: 'Vijayanagar',    x: -50, z: 10,   w: 16, h: 14, type: 'residential',density: 0.5, color: 0x33691e },
-
-  // Parks
-  { name: 'Cubbon Park',    x: 5,   z: -22,  w: 20, h: 14, type: 'park',       density: 0.3, color: 0x1b5e20 },
-  { name: 'Lalbagh',        x: -10, z: 15,   w: 18, h: 16, type: 'park',       density: 0.3, color: 0x1b5e20 },
+  // === ROW 4: SOUTH (z: 25 to 55) ===
+  { name: 'RR Nagar',       x: -55, z: 38,  w: 30, h: 30, type: 'residential',density: 0.5, color: 0x3e5c2e },
+  { name: 'Jayanagar',      x: -25, z: 38,  w: 30, h: 30, type: 'residential',density: 0.7, color: 0x3e5c2e },
+  { name: 'BTM Layout',     x: 5,   z: 38,  w: 30, h: 30, type: 'residential',density: 0.7, color: 0x33691e },
+  { name: 'HSR Layout',     x: 35,  z: 38,  w: 30, h: 30, type: 'it_hub',     density: 0.7, color: 0x263238 },
+  { name: 'Whitefield',     x: 65,  z: 38,  w: 30, h: 30, type: 'it_hub',     density: 0.8, color: 0x263238 },
 ];
 
 // ===== BANGALORE ROADS =====
@@ -99,26 +101,49 @@ interface Road {
 }
 
 const ROADS: Road[] = [
-  // Major East-West roads
-  { x1: -HALF, z1: 0,   x2: HALF, z2: 0,   width: 5, name: 'MG Road' },
-  { x1: -HALF, z1: -15, x2: HALF, z2: -15, width: 4, name: 'Seshadri Road' },
-  { x1: -HALF, z1: 20,  x2: HALF, z2: 20,  width: 4, name: 'Hosur Road' },
-  { x1: -40,   z1: -35, x2: 50,   z2: -35, width: 3, name: 'Bellary Road' },
-  { x1: -40,   z1: 38,  x2: 50,   z2: 38,  width: 3, name: 'Bannerghatta Road' },
-  { x1: -HALF, z1: -8,  x2: -10,  z2: -8,  width: 3, name: 'Chord Road' },
+  // === MAJOR EAST-WEST ARTERIES ===
+  { x1: -HALF, z1: -7,  x2: HALF, z2: -7,  width: 5, name: 'MG Road / Bellary Road' },
+  { x1: -HALF, z1: -35, x2: HALF, z2: -35, width: 4, name: 'Seshadri Road' },
+  { x1: -HALF, z1: 22,  x2: HALF, z2: 22,  width: 4, name: 'Hosur Road' },
+  { x1: -HALF, z1: 50,  x2: HALF, z2: 50,  width: 3, name: 'Bannerghatta Road' },
+  { x1: -HALF, z1: -65, x2: HALF, z2: -65, width: 3, name: 'ORR North' },
 
-  // Major North-South roads
-  { x1: 0,    z1: -HALF, x2: 0,    z2: HALF, width: 5, name: 'Namma Metro (Purple)' },
-  { x1: -20,  z1: -HALF, x2: -20,  z2: HALF, width: 4, name: 'Tumkur Road' },
-  { x1: 25,   z1: -HALF, x2: 25,   z2: HALF, width: 4, name: '100 Feet Road' },
-  { x1: -40,  z1: -50,   x2: -40,  z2: 30,   width: 3, name: 'Bull Temple Road' },
-  { x1: 50,   z1: -40,   x2: 50,   z2: 50,   width: 3, name: 'Old Airport Road' },
+  // === MAJOR NORTH-SOUTH ARTERIES ===
+  { x1: 5,    z1: -HALF, x2: 5,    z2: HALF, width: 5, name: 'Namma Metro (Purple)' },
+  { x1: -25,  z1: -HALF, x2: -25,  z2: HALF, width: 4, name: 'Tumkur Road' },
+  { x1: 35,   z1: -HALF, x2: 35,   z2: HALF, width: 4, name: '100 Feet Road' },
+  { x1: -55,  z1: -HALF, x2: -55,  z2: HALF, width: 3, name: 'Mysore Road' },
+  { x1: 65,   z1: -HALF, x2: 65,   z2: HALF, width: 3, name: 'Old Airport Road' },
 
-  // Secondary roads
-  { x1: -10,  z1: -10, x2: -10,  z2: 30,  width: 2.5, name: 'DVG Road' },
-  { x1: 15,   z1: 5,   x2: 15,   z2: 45,  width: 2.5, name: 'Sarjapur Road' },
-  { x1: 35,   z1: -20, x2: 35,   z2: 20,  width: 2.5, name: 'CMH Road' },
-  { x1: -30,  z1: -30, x2: -30,  z2: 0,   width: 2.5, name: 'Sampige Road' },
+  // === SECONDARY GRID (creates city block feel) ===
+  // Horizontal
+  { x1: -HALF, z1: -50, x2: HALF, z2: -50, width: 2.5, name: 'Palace Road' },
+  { x1: -HALF, z1: -20, x2: HALF, z2: -20, width: 2.5, name: 'Residency Road' },
+  { x1: -HALF, z1: 8,   x2: HALF, z2: 8,   width: 2.5, name: 'Lalbagh Road' },
+  { x1: -HALF, z1: 35,  x2: HALF, z2: 35,  width: 2.5, name: 'JP Nagar Road' },
+
+  // Vertical
+  { x1: -40,  z1: -HALF, x2: -40,  z2: HALF, width: 2.5, name: 'Bull Temple Road' },
+  { x1: -10,  z1: -HALF, x2: -10,  z2: HALF, width: 2.5, name: 'KR Road' },
+  { x1: 20,   z1: -HALF, x2: 20,   z2: HALF, width: 2.5, name: 'St Marks Road' },
+  { x1: 50,   z1: -HALF, x2: 50,   z2: HALF, width: 2.5, name: 'HAL Road' },
+
+  // === LOCAL ROADS (more grid density) ===
+  { x1: -HALF, z1: -42, x2: HALF, z2: -42, width: 1.8, name: '' },
+  { x1: -HALF, z1: -28, x2: HALF, z2: -28, width: 1.8, name: '' },
+  { x1: -HALF, z1: -12, x2: HALF, z2: -12, width: 1.8, name: '' },
+  { x1: -HALF, z1: 15,  x2: HALF, z2: 15,  width: 1.8, name: '' },
+  { x1: -HALF, z1: 28,  x2: HALF, z2: 28,  width: 1.8, name: '' },
+  { x1: -HALF, z1: 42,  x2: HALF, z2: 42,  width: 1.8, name: '' },
+  { x1: -48,  z1: -HALF, x2: -48, z2: HALF, width: 1.8, name: '' },
+  { x1: -33,  z1: -HALF, x2: -33, z2: HALF, width: 1.8, name: '' },
+  { x1: -18,  z1: -HALF, x2: -18, z2: HALF, width: 1.8, name: '' },
+  { x1: -3,   z1: -HALF, x2: -3,  z2: HALF, width: 1.8, name: '' },
+  { x1: 12,   z1: -HALF, x2: 12,  z2: HALF, width: 1.8, name: '' },
+  { x1: 28,   z1: -HALF, x2: 28,  z2: HALF, width: 1.8, name: '' },
+  { x1: 42,   z1: -HALF, x2: 42,  z2: HALF, width: 1.8, name: '' },
+  { x1: 57,   z1: -HALF, x2: 57,  z2: HALF, width: 1.8, name: '' },
+  { x1: 72,   z1: -HALF, x2: 72,  z2: HALF, width: 1.8, name: '' },
 ];
 
 export function createRoads(scene: THREE.Scene): void {
@@ -347,73 +372,78 @@ export function populateCity(scene: THREE.Scene): PlacedObject[] {
   createNeighborhoodGrounds(scene);
   createAreaLabels(scene);
 
-  // ===== GLOBAL OBJECTS (scattered everywhere) =====
-  placeObjects(scene, objects, createTrafficCone, 50, (x, z) => isNearRoad(x, z, 4));
-  placeObjects(scene, objects, createLampPost, 40, (x, z) => isNearRoad(x, z, 4));
-  placeObjects(scene, objects, createPerson, 60, (x, z) => !isOnRoad(x, z, 0));
-  placeObjects(scene, objects, createMotorcycle, 30, (x, z) => isNearRoad(x, z, 5));
-  placeObjects(scene, objects, createAutoRickshaw, 40, (x, z) => isNearRoad(x, z, 5));
-  placeObjects(scene, objects, createCar, 25, (x, z) => isNearRoad(x, z, 4));
-  placeObjects(scene, objects, createBMTCBus, 12, (x, z) => isNearRoad(x, z, 5));
-  placeObjects(scene, objects, createPlant, 40);
-  placeObjects(scene, objects, createSmallTree, 30, (x, z) => !isOnRoad(x, z, 1));
+  // ===== GLOBAL OBJECTS (scattered across the whole map) =====
+  placeObjects(scene, objects, createTrafficCone, 80, (x, z) => isNearRoad(x, z, 3));
+  placeObjects(scene, objects, createLampPost, 70, (x, z) => isNearRoad(x, z, 3));
+  placeObjects(scene, objects, createPerson, 100, (x, z) => !isOnRoad(x, z, 0));
+  placeObjects(scene, objects, createMotorcycle, 50, (x, z) => isNearRoad(x, z, 4));
+  placeObjects(scene, objects, createAutoRickshaw, 60, (x, z) => isNearRoad(x, z, 4));
+  placeObjects(scene, objects, createCar, 40, (x, z) => isNearRoad(x, z, 4));
+  placeObjects(scene, objects, createBMTCBus, 18, (x, z) => isNearRoad(x, z, 4));
+  placeObjects(scene, objects, createPlant, 60);
+  placeObjects(scene, objects, createSmallTree, 50, (x, z) => !isOnRoad(x, z, 1));
+  placeObjects(scene, objects, createFoodCart, 30, (x, z) => isNearRoad(x, z, 5));
 
-  // ===== PER-NEIGHBORHOOD OBJECTS =====
+  // ===== PER-NEIGHBORHOOD OBJECTS (area-specific density) =====
   for (const n of NEIGHBORHOODS) {
     const notOnRoad = (x: number, z: number) => !isOnRoad(x, z, 1);
-    const nearRoad = (x: number, z: number) => isNearRoad(x, z, 5);
+    const nearRoad = (x: number, z: number) => isNearRoad(x, z, 4);
+    // Scale count by area size
+    const areaScale = (n.w * n.h) / 400; // normalized to ~1.0 for 20x20
 
     switch (n.type) {
       case 'commercial':
       case 'market':
-        placeInArea(scene, objects, createSmallBuilding, Math.floor(8 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createCoffeeShop, Math.floor(5 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createFoodCart, Math.floor(6 * n.density), n, nearRoad);
-        placeInArea(scene, objects, createPerson, Math.floor(8 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createBench, Math.floor(3 * n.density), n, notOnRoad);
+        placeInArea(scene, objects, createSmallBuilding, Math.floor(12 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createCoffeeShop, Math.floor(8 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createFoodCart, Math.floor(8 * n.density * areaScale), n, nearRoad);
+        placeInArea(scene, objects, createPerson, Math.floor(10 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createBench, Math.floor(4 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createAutoRickshaw, Math.floor(5 * n.density * areaScale), n, nearRoad);
         break;
       case 'residential':
-        placeInArea(scene, objects, createSmallBuilding, Math.floor(6 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createSmallTree, Math.floor(5 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createPlant, Math.floor(4 * n.density), n);
-        placeInArea(scene, objects, createPerson, Math.floor(4 * n.density), n, notOnRoad);
+        placeInArea(scene, objects, createSmallBuilding, Math.floor(10 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createSmallTree, Math.floor(8 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createPlant, Math.floor(6 * n.density * areaScale), n);
+        placeInArea(scene, objects, createPerson, Math.floor(6 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createCar, Math.floor(4 * n.density * areaScale), n, nearRoad);
         break;
       case 'it_hub':
-        placeInArea(scene, objects, createITPark, Math.floor(4 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createSmallBuilding, Math.floor(3 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createCar, Math.floor(5 * n.density), n, nearRoad);
-        placeInArea(scene, objects, createPerson, Math.floor(4 * n.density), n, notOnRoad);
+        placeInArea(scene, objects, createITPark, Math.floor(6 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createSmallBuilding, Math.floor(5 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createCar, Math.floor(8 * n.density * areaScale), n, nearRoad);
+        placeInArea(scene, objects, createPerson, Math.floor(6 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createCoffeeShop, Math.floor(3 * n.density * areaScale), n, notOnRoad);
         break;
       case 'old_city':
-        placeInArea(scene, objects, createSmallBuilding, Math.floor(5 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createCoffeeShop, Math.floor(4 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createFoodCart, Math.floor(5 * n.density), n, nearRoad);
-        placeInArea(scene, objects, createBanyanTree, Math.floor(3 * n.density), n, notOnRoad);
-        placeInArea(scene, objects, createAutoRickshaw, Math.floor(4 * n.density), n, nearRoad);
-        placeInArea(scene, objects, createPerson, Math.floor(6 * n.density), n, notOnRoad);
+        placeInArea(scene, objects, createSmallBuilding, Math.floor(8 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createCoffeeShop, Math.floor(6 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createFoodCart, Math.floor(7 * n.density * areaScale), n, nearRoad);
+        placeInArea(scene, objects, createBanyanTree, Math.floor(4 * n.density * areaScale), n, notOnRoad);
+        placeInArea(scene, objects, createAutoRickshaw, Math.floor(6 * n.density * areaScale), n, nearRoad);
+        placeInArea(scene, objects, createPerson, Math.floor(8 * n.density * areaScale), n, notOnRoad);
         break;
       case 'park':
-        placeInArea(scene, objects, createSmallTree, Math.floor(10 * n.density), n);
-        placeInArea(scene, objects, createBanyanTree, Math.floor(5 * n.density), n);
-        placeInArea(scene, objects, createBench, Math.floor(6 * n.density), n);
-        placeInArea(scene, objects, createPerson, Math.floor(8 * n.density), n);
-        placeInArea(scene, objects, createPlant, Math.floor(6 * n.density), n);
+        placeInArea(scene, objects, createSmallTree, Math.floor(14 * n.density * areaScale), n);
+        placeInArea(scene, objects, createBanyanTree, Math.floor(6 * n.density * areaScale), n);
+        placeInArea(scene, objects, createBench, Math.floor(8 * n.density * areaScale), n);
+        placeInArea(scene, objects, createPerson, Math.floor(10 * n.density * areaScale), n);
+        placeInArea(scene, objects, createPlant, Math.floor(8 * n.density * areaScale), n);
         break;
     }
   }
 
-  // ===== METRO PILLARS along Namma Metro line =====
+  // ===== METRO PILLARS along Namma Metro line (x=5) =====
   for (let z = -HALF + 10; z < HALF - 10; z += 12) {
-    if (!isOnRoad(0, z, 0)) continue;
-    placeObjects(scene, objects, createMetroPillar, 1, (x, _z) => Math.abs(x) < 3 && Math.abs(_z - z) < 3);
+    placeObjects(scene, objects, createMetroPillar, 1, (x, _z) => Math.abs(x - 5) < 3 && Math.abs(_z - z) < 3);
   }
 
   // ===== LANDMARKS at real Bangalore positions =====
   const landmarks: Array<{ factory: AssetFactory; x: number; z: number }> = [
-    { factory: createVidhanaSoudha, x: -10, z: -18 },    // Near Cubbon Park
-    { factory: createBangalorePalace, x: -30, z: -35 },  // Malleshwaram area
-    { factory: createISKCONTemple, x: 25, z: -30 },      // Rajajinagar/Cantonment
-    { factory: createLalbagh, x: -10, z: 15 },            // Lalbagh Garden
+    { factory: createVidhanaSoudha, x: 8,   z: -22 },   // In Cubbon Park area
+    { factory: createBangalorePalace, x: -28, z: -50 },  // Malleshwaram
+    { factory: createISKCONTemple, x: 60,  z: -20 },     // Near Indiranagar
+    { factory: createLalbagh, x: 5,   z: 10 },            // Lalbagh area
   ];
 
   for (const lm of landmarks) {

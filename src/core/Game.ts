@@ -137,8 +137,8 @@ export class Game {
     // Player hole
     this.playerHole = new HoleRenderer();
     this.scene.add(this.playerHole.group);
-    this.playerX = 0;
-    this.playerZ = 10;
+    this.playerX = 35;  // Start at MG Road
+    this.playerZ = -15;
     this.playerRadius = BASE_RADIUS;
     this.totalVolume = 0;
     this.score = 0;
@@ -305,7 +305,9 @@ export class Game {
     let consumed = 0;
     for (const obj of this.objects) {
       if (obj.consumed || obj.consuming) continue;
-      if (!canEat(holeRadius, obj.tier)) continue;
+
+      // Visual radius check: hole must be bigger than the object to eat it
+      if (holeRadius < obj.objectRadius) continue;
 
       let dist = distance2D(holeX, holeZ, obj.x, obj.z);
 
@@ -319,12 +321,11 @@ export class Game {
         obj.z += (dz / mag) * pullStrength;
         obj.mesh.position.x = obj.x;
         obj.mesh.position.z = obj.z;
-        // Recalculate distance after pull
         dist = distance2D(holeX, holeZ, obj.x, obj.z);
       }
 
-      // Consume if object center is inside the hole
-      if (dist < holeRadius * 1.0) {
+      // Consume: object falls in if its center is inside the hole
+      if (dist < holeRadius) {
         obj.consuming = true;
         obj.consumeProgress = 0;
         obj.originalY = obj.mesh.position.y;
@@ -525,9 +526,9 @@ export class Game {
       // AI consumption
       for (const obj of this.objects) {
         if (obj.consumed || obj.consuming) continue;
-        if (!canEat(ai.radius, obj.tier)) continue;
+        if (ai.radius < obj.objectRadius) continue;
         const d = distance2D(ai.x, ai.z, obj.x, obj.z);
-        if (d < ai.radius * 0.85) {
+        if (d < ai.radius) {
           obj.consuming = true;
           obj.consumeProgress = 0;
           obj.originalY = obj.mesh.position.y;

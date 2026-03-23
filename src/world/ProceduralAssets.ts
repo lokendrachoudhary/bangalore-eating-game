@@ -9,6 +9,7 @@ export interface CityObject {
   points: number;
   volume: number;
   name: string;
+  objectRadius: number; // Visual radius of the object - hole must be bigger than this to eat it
 }
 
 const COLORS = {
@@ -61,7 +62,7 @@ export function createTrafficCone(): CityObject {
   base.position.y = 0.025;
   group.add(base);
 
-  return { mesh: group, tier: SizeTier.XS, points: 10, volume: 1, name: 'Traffic Cone' };
+  return { mesh: group, tier: SizeTier.XS, points: 10, volume: 1, name: 'Traffic Cone', objectRadius: 0.2 };
 }
 
 export function createPlant(): CityObject {
@@ -80,7 +81,7 @@ export function createPlant(): CityObject {
   bush.position.y = 0.45;
   group.add(bush);
 
-  return { mesh: group, tier: SizeTier.XS, points: 10, volume: 1, name: 'Plant' };
+  return { mesh: group, tier: SizeTier.XS, points: 10, volume: 1, name: 'Plant', objectRadius: 0.3 };
 }
 
 export function createFoodCart(): CityObject {
@@ -112,7 +113,7 @@ export function createFoodCart(): CityObject {
   umbrella.position.y = 1.0;
   group.add(umbrella);
 
-  return { mesh: group, tier: SizeTier.XS, points: 15, volume: 2, name: 'Food Cart' };
+  return { mesh: group, tier: SizeTier.XS, points: 15, volume: 2, name: 'Food Cart', objectRadius: 0.5 };
 }
 
 export function createLampPost(): CityObject {
@@ -131,7 +132,7 @@ export function createLampPost(): CityObject {
   lamp.position.y = 1.55;
   group.add(lamp);
 
-  return { mesh: group, tier: SizeTier.XS, points: 10, volume: 1, name: 'Lamp Post' };
+  return { mesh: group, tier: SizeTier.XS, points: 10, volume: 1, name: 'Lamp Post', objectRadius: 0.15 };
 }
 
 // ===== TIER S (People, benches, motorcycles, small trees) =====
@@ -156,7 +157,7 @@ export function createPerson(): CityObject {
   head.position.y = 1.05;
   group.add(head);
 
-  return { mesh: group, tier: SizeTier.S, points: 25, volume: 3, name: 'Person' };
+  return { mesh: group, tier: SizeTier.S, points: 25, volume: 3, name: 'Person', objectRadius: 0.2 };
 }
 
 export function createSmallTree(): CityObject {
@@ -175,7 +176,7 @@ export function createSmallTree(): CityObject {
   canopy.position.y = 1.5;
   group.add(canopy);
 
-  return { mesh: group, tier: SizeTier.S, points: 20, volume: 4, name: 'Tree' };
+  return { mesh: group, tier: SizeTier.S, points: 20, volume: 4, name: 'Tree', objectRadius: 0.6 };
 }
 
 export function createBench(): CityObject {
@@ -205,7 +206,7 @@ export function createBench(): CityObject {
   back.position.set(0, 0.55, -0.13);
   group.add(back);
 
-  return { mesh: group, tier: SizeTier.S, points: 20, volume: 3, name: 'Bench' };
+  return { mesh: group, tier: SizeTier.S, points: 20, volume: 3, name: 'Bench', objectRadius: 0.5 };
 }
 
 // ===== TIER M (Auto-rickshaws, cars, bus stops) =====
@@ -261,7 +262,7 @@ export function createAutoRickshaw(): CityObject {
     group.add(wheel);
   }
 
-  return { mesh: group, tier: SizeTier.M, points: 50, volume: 12, name: 'Auto Rickshaw' };
+  return { mesh: group, tier: SizeTier.M, points: 50, volume: 12, name: 'Auto Rickshaw', objectRadius: 0.7 };
 }
 
 export function createCar(): CityObject {
@@ -294,7 +295,7 @@ export function createCar(): CityObject {
     }
   }
 
-  return { mesh: group, tier: SizeTier.M, points: 40, volume: 15, name: 'Car' };
+  return { mesh: group, tier: SizeTier.M, points: 40, volume: 15, name: 'Car', objectRadius: 0.9 };
 }
 
 // ===== TIER L (BMTC bus, small buildings) =====
@@ -338,7 +339,7 @@ export function createBMTCBus(): CityObject {
     }
   }
 
-  return { mesh: group, tier: SizeTier.L, points: 100, volume: 50, name: 'BMTC Bus' };
+  return { mesh: group, tier: SizeTier.L, points: 100, volume: 50, name: 'BMTC Bus', objectRadius: 1.8 };
 }
 
 export function createSmallBuilding(): CityObject {
@@ -371,7 +372,7 @@ export function createSmallBuilding(): CityObject {
     }
   }
 
-  return { mesh: group, tier: SizeTier.L, points: 80, volume: 40, name: 'Building' };
+  return { mesh: group, tier: SizeTier.L, points: 80, volume: 40, name: 'Building', objectRadius: 1.5 };
 }
 
 // ===== TIER XL (Landmarks) =====
@@ -422,7 +423,7 @@ export function createVidhanaSoudha(): CityObject {
   steps.position.set(0, 0.2, 3.5);
   group.add(steps);
 
-  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Vidhana Soudha' };
+  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Vidhana Soudha', objectRadius: 5.0 };
 }
 
 export function createBangalorePalace(): CityObject {
@@ -472,7 +473,7 @@ export function createBangalorePalace(): CityObject {
   centralTop.position.y = 6.1;
   group.add(centralTop);
 
-  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Bangalore Palace' };
+  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Bangalore Palace', objectRadius: 4.0 };
 }
 
 export function createISKCONTemple(): CityObject {
@@ -520,7 +521,7 @@ export function createISKCONTemple(): CityObject {
   finial.position.y = 7.7;
   group.add(finial);
 
-  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'ISKCON Temple' };
+  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'ISKCON Temple', objectRadius: 3.5 };
 }
 
 export function createITPark(): CityObject {
@@ -546,7 +547,7 @@ export function createITPark(): CityObject {
     group.add(hLine);
   }
 
-  return { mesh: group, tier: SizeTier.L, points: 120, volume: 60, name: 'IT Park' };
+  return { mesh: group, tier: SizeTier.L, points: 120, volume: 60, name: 'IT Park', objectRadius: 2.0 };
 }
 
 /** Large banyan tree */
@@ -581,7 +582,7 @@ export function createBanyanTree(): CityObject {
     group.add(root);
   }
 
-  return { mesh: group, tier: SizeTier.M, points: 35, volume: 10, name: 'Banyan Tree' };
+  return { mesh: group, tier: SizeTier.M, points: 35, volume: 10, name: 'Banyan Tree', objectRadius: 1.8 };
 }
 
 /** Lalbagh Glasshouse - iconic Victorian glass structure */
@@ -630,7 +631,7 @@ export function createLalbagh(): CityObject {
     group.add(rib);
   }
 
-  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Lalbagh Glasshouse' };
+  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Lalbagh Glasshouse', objectRadius: 4.0 };
 }
 
 /** Filter coffee shop - Bangalore's coffee culture */
@@ -670,7 +671,7 @@ export function createCoffeeShop(): CityObject {
   table.position.set(0.5, 0.2, 1.0);
   group.add(table);
 
-  return { mesh: group, tier: SizeTier.S, points: 30, volume: 5, name: 'Coffee Shop' };
+  return { mesh: group, tier: SizeTier.S, points: 30, volume: 5, name: 'Coffee Shop', objectRadius: 0.8 };
 }
 
 /** Motorcycle / two-wheeler */
@@ -721,7 +722,7 @@ export function createMotorcycle(): CityObject {
   headlight.position.set(0.38, 0.5, 0);
   group.add(headlight);
 
-  return { mesh: group, tier: SizeTier.S, points: 30, volume: 4, name: 'Motorcycle' };
+  return { mesh: group, tier: SizeTier.S, points: 30, volume: 4, name: 'Motorcycle', objectRadius: 0.4 };
 }
 
 /** Namma Metro pillar */
@@ -752,5 +753,5 @@ export function createMetroPillar(): CityObject {
   accent.position.y = 4.05;
   group.add(accent);
 
-  return { mesh: group, tier: SizeTier.L, points: 90, volume: 45, name: 'Metro Pillar' };
+  return { mesh: group, tier: SizeTier.L, points: 90, volume: 45, name: 'Metro Pillar', objectRadius: 1.5 };
 }
