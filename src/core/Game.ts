@@ -6,6 +6,7 @@ import { HoleRenderer } from '../rendering/HoleRenderer.ts';
 import { createRoads, populateCity, MAP_SIZE, type PlacedObject } from '../world/CityMap.ts';
 import { canEat, getCurrentTier, TIER_NAMES } from '../world/SizeTier.ts';
 import { ParticleSystem } from '../rendering/ParticleSystem.ts';
+import { AudioManager } from './AudioManager.ts';
 import { lerp, clamp, distance2D, randomRange } from '../utils/math.ts';
 
 interface AIHole {
@@ -52,6 +53,8 @@ export class Game {
   private aiHoles: AIHole[] = [];
   private objects: PlacedObject[] = [];
   private particles!: ParticleSystem;
+  private audio = new AudioManager();
+  private lastTier = 0;
 
   private timer = ROUND_DURATION;
   private gameState: 'menu' | 'playing' | 'gameover' = 'menu';
@@ -126,6 +129,7 @@ export class Game {
     this.totalVolume = 0;
     this.score = 0;
     this.speed = 15;
+    this.lastTier = 0;
     this.playerHole.setPosition(this.playerX, this.playerZ);
     this.playerHole.setRadius(this.playerRadius);
 
@@ -260,6 +264,8 @@ export class Game {
         this.playerHole.setRadius(this.playerRadius);
         this.score += 200;
         this.particles.burst(ai.x, 0.1, ai.z, 15, 0xff5252);
+        this.audio.playBigEat();
+        this.showScorePopup(ai.x, ai.z, 200);
       }
 
       // AI eats player (respawn player)
@@ -272,6 +278,7 @@ export class Game {
         this.playerHole.setRadius(this.playerRadius);
         this.score = Math.max(0, this.score - 100);
         this.particles.burst(this.playerX, 0.1, this.playerZ, 10, 0x4fc3f7);
+        this.audio.playDeath();
       }
     }
   }
@@ -299,6 +306,13 @@ export class Game {
           this.playerRadius = BASE_RADIUS * Math.pow(1 + this.totalVolume / VOLUME_SCALE, 1 / 3);
           this.playerHole.setRadius(this.playerRadius);
           this.score += obj.points;
+          this.audio.playEat(obj.tier);
+          // Check for tier up
+          const newTier = getCurrentTier(this.playerRadius);
+          if (newTier > this.lastTier) {
+            this.lastTier = newTier;
+            this.audio.playTierUp();
+          }
           // Floating score popup
           this.showScorePopup(obj.x, obj.z, obj.points);
         }
@@ -489,6 +503,7 @@ export class Game {
 
   private endGame(): void {
     this.gameState = 'gameover';
+    this.audio.playGameOver();
 
     const entries = [
       { name: 'You', score: this.score, isPlayer: true },
