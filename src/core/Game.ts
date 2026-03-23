@@ -3,8 +3,8 @@ import { GameLoop } from './GameLoop.ts';
 import { InputManager } from './InputManager.ts';
 import { createRenderer, createCamera, createScene } from '../rendering/SceneSetup.ts';
 import { HoleRenderer } from '../rendering/HoleRenderer.ts';
-import { createRoads, populateCity, MAP_SIZE, type PlacedObject } from '../world/CityMap.ts';
-import { canEat, getCurrentTier, TIER_NAMES } from '../world/SizeTier.ts';
+import { ChunkManager, MAP_SIZE, type PlacedObject } from '../world/ChunkManager.ts';
+import { getCurrentTier, TIER_NAMES } from '../world/SizeTier.ts';
 import { ParticleSystem } from '../rendering/ParticleSystem.ts';
 import { AudioManager } from './AudioManager.ts';
 import { lerp, clamp, distance2D, randomRange } from '../utils/math.ts';
@@ -52,6 +52,7 @@ export class Game {
 
   private aiHoles: AIHole[] = [];
   private objects: PlacedObject[] = [];
+  private chunkManager!: ChunkManager;
   private particles!: ParticleSystem;
   private audio = new AudioManager();
   private lastTier = 0;
@@ -118,27 +119,24 @@ export class Game {
     // Clear previous game objects
     this.clearScene();
 
-    // Ground
-    const ground = HoleRenderer.createGround(MAP_SIZE + 40);
+    // Ground (base layer under chunks)
+    const ground = HoleRenderer.createGround(MAP_SIZE + 200);
     this.scene.add(ground);
-
-    // Roads
-    createRoads(this.scene);
 
     // Map boundary visual
     this.createBoundary();
 
-    // Populate city
-    this.objects = populateCity(this.scene);
+    // Chunk-based city (streams in as player moves)
+    this.chunkManager = new ChunkManager(this.scene);
 
     // Particle system
     this.particles = new ParticleSystem(this.scene);
 
-    // Player hole
+    // Player hole - start at MG Road
     this.playerHole = new HoleRenderer();
     this.scene.add(this.playerHole.group);
-    this.playerX = 35;  // Start at MG Road
-    this.playerZ = -15;
+    this.playerX = 200;   // MG Road area
+    this.playerZ = -100;
     this.playerRadius = BASE_RADIUS;
     this.totalVolume = 0;
     this.score = 0;
@@ -155,11 +153,11 @@ export class Game {
       this.scene.add(holeRenderer.group);
 
       const angle = (i / 4) * Math.PI * 2;
-      const dist = 25;
+      const dist = 200; // Spread across city
       this.aiHoles.push({
         renderer: holeRenderer,
-        x: Math.cos(angle) * dist,
-        z: Math.sin(angle) * dist,
+        x: this.playerX + Math.cos(angle) * dist,
+        z: this.playerZ + Math.sin(angle) * dist,
         radius: BASE_RADIUS,
         totalVolume: 0,
         score: 0,
@@ -221,6 +219,10 @@ export class Game {
 
   private update(dt: number): void {
     if (this.gameState !== 'playing') return;
+
+    // Stream chunks around player
+    this.chunkManager.update(this.playerX, this.playerZ);
+    this.objects = this.chunkManager.allObjects;
 
     // Timer
     this.timer -= dt;
@@ -435,7 +437,8 @@ export class Game {
   private updateMinimap(): void {
     const ctx = this.minimapCtx;
     const w = 100, h = 100;
-    const scale = w / MAP_SIZE;
+    const viewRange = 200; // Show 200 unit radius around player
+    const scale = w / (viewRange * 2);
 
     ctx.clearRect(0, 0, w, h);
 
@@ -443,25 +446,31 @@ export class Game {
     ctx.fillStyle = '#2d5a3e';
     ctx.fillRect(0, 0, w, h);
 
-    // Roads (simplified)
+    // Roads (draw all major roads relative to player)
     ctx.fillStyle = '#37474f';
-    ctx.fillRect(0, h / 2 - 2, w, 4); // MG Road
-    ctx.fillRect(w / 2 - 2, 0, 4, h); // Namma Metro
+    // Simplified: draw grid lines
+    for (let offset = -400; offset <= 400; offset += 40) {
+      const ry = (offset - this.playerZ + viewRange) * scale;
+      if (ry > 0 && ry < h) { ctx.fillRect(0, ry - 0.5, w, 1); }
+      const rx = (offset - this.playerX + viewRange) * scale;
+      if (rx > 0 && rx < w) { ctx.fillRect(rx - 0.5, 0, 1, h); }
+    }
 
     // AI holes
     for (const ai of this.aiHoles) {
       if (!ai.renderer.group.visible) continue;
-      const mx = (ai.x + MAP_SIZE / 2) * scale;
-      const mz = (ai.z + MAP_SIZE / 2) * scale;
+      const mx = (ai.x - this.playerX + viewRange) * scale;
+      const mz = (ai.z - this.playerZ + viewRange) * scale;
+      if (mx < -5 || mx > w + 5 || mz < -5 || mz > h + 5) continue;
       ctx.fillStyle = ai.color;
       ctx.beginPath();
-      ctx.arc(mx, mz, Math.max(2, ai.radius * scale), 0, Math.PI * 2);
+      ctx.arc(mx, mz, Math.max(2, ai.radius * scale * 2), 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Player
-    const px = (this.playerX + MAP_SIZE / 2) * scale;
-    const pz = (this.playerZ + MAP_SIZE / 2) * scale;
+    // Player always at center
+    const px = w / 2;
+    const pz = h / 2;
     ctx.fillStyle = '#4fc3f7';
     ctx.beginPath();
     ctx.arc(px, pz, Math.max(3, this.playerRadius * scale), 0, Math.PI * 2);
@@ -481,7 +490,7 @@ export class Game {
         let bestDist = Infinity;
         for (const obj of this.objects) {
           if (obj.consumed || obj.consuming) continue;
-          if (!canEat(ai.radius, obj.tier)) continue;
+          if (ai.radius < obj.objectRadius) continue;
           const d = distance2D(ai.x, ai.z, obj.x, obj.z);
           if (d < bestDist) {
             bestDist = d;
