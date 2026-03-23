@@ -1,17 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  base: '/bangalore-eating-game/',
   build: {
     target: 'es2022',
-    minify: 'terser',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          three: ['three'],
-          rapier: ['@dimforge/rapier3d-compat'],
-        },
-      },
-    },
   },
   optimizeDeps: {
     exclude: ['@dimforge/rapier3d-compat'],
