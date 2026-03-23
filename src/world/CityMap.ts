@@ -6,6 +6,7 @@ import {
   createAutoRickshaw, createCar, createBanyanTree,
   createBMTCBus, createSmallBuilding, createITPark,
   createVidhanaSoudha, createBangalorePalace, createISKCONTemple,
+  createLalbagh, createCoffeeShop, createMotorcycle, createMetroPillar,
   type CityObject
 } from './ProceduralAssets.ts';
 import { randomRange } from '../utils/math.ts';
@@ -124,6 +125,61 @@ function isNearRoad(x: number, z: number, dist: number = 5): boolean {
   return isOnRoad(x, z, dist);
 }
 
+// Park zones (green areas with more trees, benches, people)
+interface ParkZone {
+  x: number; z: number; w: number; h: number; name: string;
+}
+
+const PARK_ZONES: ParkZone[] = [
+  { x: 10, z: -15, w: 25, h: 20, name: 'Cubbon Park' },
+  { x: -40, z: 20, w: 20, h: 18, name: 'Lalbagh Garden' },
+];
+
+function isInPark(x: number, z: number): boolean {
+  for (const park of PARK_ZONES) {
+    if (x >= park.x - park.w / 2 && x <= park.x + park.w / 2 &&
+        z >= park.z - park.h / 2 && z <= park.z + park.h / 2) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function createParkGrounds(scene: THREE.Scene): void {
+  const parkMat = new THREE.MeshStandardMaterial({
+    color: 0x2d6a30, // Darker green for parks
+    roughness: 0.95,
+  });
+  for (const park of PARK_ZONES) {
+    const parkGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(park.w, park.h),
+      parkMat
+    );
+    parkGround.rotation.x = -Math.PI / 2;
+    parkGround.position.set(park.x, 0.005, park.z);
+    parkGround.renderOrder = 0;
+    scene.add(parkGround);
+
+    // Park border (low fence/hedge)
+    const hedgeMat = new THREE.MeshStandardMaterial({ color: 0x1b5e20, flatShading: true });
+    const hedgeH = 0.3;
+    const sides = [
+      { sx: park.w, sz: 0.3, px: park.x, pz: park.z - park.h / 2 },
+      { sx: park.w, sz: 0.3, px: park.x, pz: park.z + park.h / 2 },
+      { sx: 0.3, sz: park.h, px: park.x - park.w / 2, pz: park.z },
+      { sx: 0.3, sz: park.h, px: park.x + park.w / 2, pz: park.z },
+    ];
+    for (const s of sides) {
+      const hedge = new THREE.Mesh(
+        new THREE.BoxGeometry(s.sx, hedgeH, s.sz),
+        hedgeMat
+      );
+      hedge.position.set(s.px, hedgeH / 2, s.pz);
+      scene.add(hedge);
+    }
+  }
+}
+
 type AssetFactory = () => CityObject;
 
 function placeObjects(
@@ -166,32 +222,42 @@ function placeObjects(
 export function populateCity(scene: THREE.Scene): PlacedObject[] {
   const objects: PlacedObject[] = [];
 
+  // Create park grounds first (visual only)
+  createParkGrounds(scene);
+
   // XS tier - lots of small objects
   placeObjects(scene, objects, createTrafficCone, 30, (x, z) => isNearRoad(x, z, 4));
-  placeObjects(scene, objects, createPlant, 25);
+  placeObjects(scene, objects, createPlant, 30);
   placeObjects(scene, objects, createFoodCart, 15, (x, z) => isNearRoad(x, z, 6));
-  placeObjects(scene, objects, createLampPost, 20, (x, z) => isNearRoad(x, z, 4));
+  placeObjects(scene, objects, createLampPost, 25, (x, z) => isNearRoad(x, z, 4));
 
   // S tier
-  placeObjects(scene, objects, createPerson, 35, (x, z) => !isOnRoad(x, z, 0));
-  placeObjects(scene, objects, createSmallTree, 25, (x, z) => !isOnRoad(x, z, 1));
-  placeObjects(scene, objects, createBench, 12, (x, z) => !isOnRoad(x, z, 1));
+  placeObjects(scene, objects, createPerson, 40, (x, z) => !isOnRoad(x, z, 0));
+  placeObjects(scene, objects, createSmallTree, 20, (x, z) => !isOnRoad(x, z, 1));
+  placeObjects(scene, objects, createSmallTree, 15, (x, z) => isInPark(x, z)); // Extra trees in parks
+  placeObjects(scene, objects, createBench, 10, (x, z) => isInPark(x, z)); // Benches in parks
+  placeObjects(scene, objects, createBench, 8, (x, z) => !isOnRoad(x, z, 1));
+  placeObjects(scene, objects, createCoffeeShop, 10, (x, z) => !isOnRoad(x, z, 2));
+  placeObjects(scene, objects, createMotorcycle, 15, (x, z) => isNearRoad(x, z, 5));
 
   // M tier
-  placeObjects(scene, objects, createAutoRickshaw, 20, (x, z) => isNearRoad(x, z, 5));
+  placeObjects(scene, objects, createAutoRickshaw, 25, (x, z) => isNearRoad(x, z, 5));
   placeObjects(scene, objects, createCar, 15, (x, z) => isNearRoad(x, z, 4));
-  placeObjects(scene, objects, createBanyanTree, 10, (x, z) => !isOnRoad(x, z, 2));
+  placeObjects(scene, objects, createBanyanTree, 8, (x, z) => isInPark(x, z));
+  placeObjects(scene, objects, createBanyanTree, 6, (x, z) => !isOnRoad(x, z, 2));
 
   // L tier
   placeObjects(scene, objects, createBMTCBus, 8, (x, z) => isNearRoad(x, z, 5));
-  placeObjects(scene, objects, createSmallBuilding, 18, (x, z) => !isOnRoad(x, z, 3));
-  placeObjects(scene, objects, createITPark, 5, (x, z) => !isOnRoad(x, z, 4) && x > 10);
+  placeObjects(scene, objects, createSmallBuilding, 18, (x, z) => !isOnRoad(x, z, 3) && !isInPark(x, z));
+  placeObjects(scene, objects, createITPark, 5, (x, z) => !isOnRoad(x, z, 4) && x > 10 && !isInPark(x, z));
+  placeObjects(scene, objects, createMetroPillar, 6, (x, z) => isOnRoad(x, z, 0) && Math.abs(x) < 3);
 
   // XL tier - landmarks at fixed positions
   const landmarks: Array<{ factory: AssetFactory; x: number; z: number }> = [
     { factory: createVidhanaSoudha, x: -35, z: -40 },
     { factory: createBangalorePalace, x: 35, z: -35 },
     { factory: createISKCONTemple, x: 40, z: 40 },
+    { factory: createLalbagh, x: -40, z: 20 }, // In Lalbagh Garden park
   ];
 
   for (const lm of landmarks) {

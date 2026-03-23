@@ -5,6 +5,7 @@ import { createRenderer, createCamera, createScene } from '../rendering/SceneSet
 import { HoleRenderer } from '../rendering/HoleRenderer.ts';
 import { createRoads, populateCity, MAP_SIZE, type PlacedObject } from '../world/CityMap.ts';
 import { canEat, getCurrentTier, TIER_NAMES } from '../world/SizeTier.ts';
+import { ParticleSystem } from '../rendering/ParticleSystem.ts';
 import { lerp, clamp, distance2D, randomRange } from '../utils/math.ts';
 
 interface AIHole {
@@ -50,6 +51,7 @@ export class Game {
 
   private aiHoles: AIHole[] = [];
   private objects: PlacedObject[] = [];
+  private particles!: ParticleSystem;
 
   private timer = ROUND_DURATION;
   private gameState: 'menu' | 'playing' | 'gameover' = 'menu';
@@ -111,6 +113,9 @@ export class Game {
 
     // Populate city
     this.objects = populateCity(this.scene);
+
+    // Particle system
+    this.particles = new ParticleSystem(this.scene);
 
     // Player hole
     this.playerHole = new HoleRenderer();
@@ -225,6 +230,12 @@ export class Game {
     // Update consuming animations
     this.updateConsumingAnimations(dt);
 
+    // Update particles
+    this.particles.update(dt);
+
+    // Check player eating AI holes
+    this.checkHoleVsHole();
+
     // Update AI
     this.updateAI(dt);
 
@@ -233,6 +244,36 @@ export class Game {
 
     // Update HUD
     this.updateHUD();
+  }
+
+  private checkHoleVsHole(): void {
+    for (const ai of this.aiHoles) {
+      if (!ai.renderer.group.visible) continue;
+
+      const dist = distance2D(this.playerX, this.playerZ, ai.x, ai.z);
+
+      // Player eats AI
+      if (this.playerRadius > ai.radius * 1.3 && dist < this.playerRadius * 0.6) {
+        ai.renderer.group.visible = false;
+        this.totalVolume += ai.totalVolume * 0.5;
+        this.playerRadius = BASE_RADIUS * Math.pow(1 + this.totalVolume / VOLUME_SCALE, 1 / 3);
+        this.playerHole.setRadius(this.playerRadius);
+        this.score += 200;
+        this.particles.burst(ai.x, 0.1, ai.z, 15, 0xff5252);
+      }
+
+      // AI eats player (respawn player)
+      if (ai.radius > this.playerRadius * 1.3 && dist < ai.radius * 0.6) {
+        // Respawn at random location
+        this.playerX = randomRange(-HALF_MAP + 10, HALF_MAP - 10);
+        this.playerZ = randomRange(-HALF_MAP + 10, HALF_MAP - 10);
+        this.totalVolume = Math.max(0, this.totalVolume * 0.3);
+        this.playerRadius = BASE_RADIUS * Math.pow(1 + this.totalVolume / VOLUME_SCALE, 1 / 3);
+        this.playerHole.setRadius(this.playerRadius);
+        this.score = Math.max(0, this.score - 100);
+        this.particles.burst(this.playerX, 0.1, this.playerZ, 10, 0x4fc3f7);
+      }
+    }
   }
 
   private checkConsumption(holeX: number, holeZ: number, holeRadius: number, isPlayer: boolean): number {
@@ -247,6 +288,9 @@ export class Game {
         obj.consumeProgress = 0;
         obj.originalY = obj.mesh.position.y;
         obj.originalScale = 1;
+
+        // Dust particle burst
+        this.particles.burst(obj.x, 0.1, obj.z, 6 + obj.tier * 2, 0xbcaaa4);
 
         if (isPlayer) {
           this.totalVolume += obj.volume;
@@ -344,6 +388,7 @@ export class Game {
           obj.consuming = true;
           obj.consumeProgress = 0;
           obj.originalY = obj.mesh.position.y;
+          this.particles.burst(obj.x, 0.1, obj.z, 4, 0xbcaaa4);
           ai.totalVolume += obj.volume;
           ai.radius = BASE_RADIUS * Math.pow(1 + ai.totalVolume / VOLUME_SCALE, 1 / 3);
           ai.renderer.setRadius(ai.radius);

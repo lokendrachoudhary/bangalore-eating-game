@@ -583,3 +583,174 @@ export function createBanyanTree(): CityObject {
 
   return { mesh: group, tier: SizeTier.M, points: 35, volume: 10, name: 'Banyan Tree' };
 }
+
+/** Lalbagh Glasshouse - iconic Victorian glass structure */
+export function createLalbagh(): CityObject {
+  const group = new THREE.Group();
+
+  // Base
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 0.4, 4),
+    createMaterial(0xcfd8dc)
+  );
+  base.position.y = 0.2;
+  group.add(base);
+
+  // Glass walls (transparent)
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0xb3e5fc,
+    transparent: true,
+    opacity: 0.4,
+    flatShading: true,
+    roughness: 0.1,
+    metalness: 0.3,
+  });
+
+  const wallGeom = new THREE.BoxGeometry(5.5, 2, 3.5);
+  const walls = new THREE.Mesh(wallGeom, glassMat);
+  walls.position.y = 1.4;
+  group.add(walls);
+
+  // Arched roof (half cylinder)
+  const roofGeom = new THREE.CylinderGeometry(2, 2, 5.5, 12, 1, false, 0, Math.PI);
+  const roof = new THREE.Mesh(roofGeom, glassMat);
+  roof.rotation.z = Math.PI / 2;
+  roof.rotation.y = Math.PI / 2;
+  roof.position.y = 2.4;
+  group.add(roof);
+
+  // Metal frame ribs
+  const frameMat = createMaterial(0x546e7a);
+  for (let x = -2; x <= 2; x += 1) {
+    const rib = new THREE.Mesh(
+      new THREE.TorusGeometry(1.8, 0.04, 4, 12, Math.PI),
+      frameMat
+    );
+    rib.position.set(x, 2.4, 0);
+    group.add(rib);
+  }
+
+  return { mesh: group, tier: SizeTier.XL, points: 500, volume: 200, name: 'Lalbagh Glasshouse' };
+}
+
+/** Filter coffee shop - Bangalore's coffee culture */
+export function createCoffeeShop(): CityObject {
+  const group = new THREE.Group();
+
+  // Building
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 1.2, 1.2),
+    createMaterial(0x4e342e) // Dark brown
+  );
+  body.position.y = 0.6;
+  group.add(body);
+
+  // Sign board
+  const sign = new THREE.Mesh(
+    new THREE.BoxGeometry(1.0, 0.3, 0.05),
+    createMaterial(0xffcc02) // Yellow sign
+  );
+  sign.position.set(0, 1.4, 0.63);
+  group.add(sign);
+
+  // Awning
+  const awning = new THREE.Mesh(
+    new THREE.BoxGeometry(1.7, 0.05, 0.6),
+    createMaterial(0xd32f2f) // Red awning
+  );
+  awning.position.set(0, 1.15, 0.9);
+  awning.rotation.x = 0.15;
+  group.add(awning);
+
+  // Small table outside
+  const table = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 0.4, 6),
+    createMaterial(0x8d6e63)
+  );
+  table.position.set(0.5, 0.2, 1.0);
+  group.add(table);
+
+  return { mesh: group, tier: SizeTier.S, points: 30, volume: 5, name: 'Coffee Shop' };
+}
+
+/** Motorcycle / two-wheeler */
+export function createMotorcycle(): CityObject {
+  const group = new THREE.Group();
+
+  // Body
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.7, 0.3, 0.25),
+    createMaterial(0x212121)
+  );
+  body.position.y = 0.35;
+  group.add(body);
+
+  // Seat
+  const seat = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.08, 0.2),
+    createMaterial(0x424242)
+  );
+  seat.position.set(-0.1, 0.55, 0);
+  group.add(seat);
+
+  // Front fork
+  const fork = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.02, 0.4, 4),
+    createMaterial(0x757575)
+  );
+  fork.position.set(0.3, 0.35, 0);
+  fork.rotation.z = 0.3;
+  group.add(fork);
+
+  // Wheels
+  const wheelMat = createMaterial(0x333333);
+  for (const x of [-0.25, 0.3]) {
+    const wheel = new THREE.Mesh(
+      new THREE.TorusGeometry(0.12, 0.03, 6, 12),
+      wheelMat
+    );
+    wheel.position.set(x, 0.15, 0);
+    group.add(wheel);
+  }
+
+  // Headlight
+  const headlight = new THREE.Mesh(
+    new THREE.SphereGeometry(0.04, 6, 4),
+    createMaterial(0xffee58)
+  );
+  headlight.position.set(0.38, 0.5, 0);
+  group.add(headlight);
+
+  return { mesh: group, tier: SizeTier.S, points: 30, volume: 4, name: 'Motorcycle' };
+}
+
+/** Namma Metro pillar */
+export function createMetroPillar(): CityObject {
+  const group = new THREE.Group();
+
+  // Pillar
+  const pillar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.5, 4, 8),
+    createMaterial(0x78909c)
+  );
+  pillar.position.y = 2;
+  group.add(pillar);
+
+  // Top beam
+  const beam = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 0.5, 1.5),
+    createMaterial(0x90a4ae)
+  );
+  beam.position.y = 4.25;
+  group.add(beam);
+
+  // Purple metro accent
+  const accent = new THREE.Mesh(
+    new THREE.BoxGeometry(3.02, 0.15, 1.52),
+    createMaterial(0x7b1fa2) // Namma Metro purple
+  );
+  accent.position.y = 4.05;
+  group.add(accent);
+
+  return { mesh: group, tier: SizeTier.L, points: 90, volume: 45, name: 'Metro Pillar' };
+}
